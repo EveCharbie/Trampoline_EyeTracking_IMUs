@@ -161,6 +161,44 @@ for i, name in enumerate(trial_per_athlete_per_move_index):
                                   np.nanmean(heatmaps_spreading_table_array[index, 6].astype(float)),
                                   ]]
 
+def stats_procedure(name, dataframe):
+
+    # ANOVA
+    print(f"Mixed ANOVA for {name}")
+    out = pg.mixed_anova(data=dataframe, dv=name, within='Acrobatics', between='Expertise', subject='Name', effsize='np2')
+    print(f'{out}\n\n')
+
+    # Post-hocs
+    print(f"T-tests for {name} (Holm-Bonferroni corrections will be applied afterwards)")
+    out_posthocs = pg.pairwise_tests(data=dataframe, dv=name, within='Acrobatics', between='Expertise', subject='Name',
+                            parametric=True)
+    print(f'{out_posthocs}\n\n')
+
+    if out['p-unc'][0] < 0.05:
+        print(f"Significant effect of Expertise for {name} (p-value = {out['p-unc'][0]}) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    if out['p-unc'][1] < 0.05:
+        print(f"Significant effect of Acrobatics for {name} (p-value = {out['p-unc'][1]})")
+        H0_reject_acrobatics, pvalues_corrected_acrobatics = pg.multicomp(list(out_posthocs["p-unc"][:6]), alpha=0.05, method='holm')
+        for acro_comp in range(6):
+            if H0_reject_acrobatics[acro_comp]:
+                if out_posthocs["hedges"][acro_comp] > 0:
+                    print(f"Green: {out_posthocs['A'][acro_comp]} is significantly higher than {out_posthocs['B'][acro_comp]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+                else:
+                    print(f"Red: {out_posthocs['B'][acro_comp]} is significantly smaller than {out_posthocs['A'][acro_comp]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+            else:
+                print(f"Gray: No significant difference between {out_posthocs['A'][acro_comp]} and {out_posthocs['B'][acro_comp]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+    if out['p-unc'][2] < 0.05:
+        print(f"Significant interaction for {name} (p-value = {out['p-unc'][2]})")
+        H0_reject_interactions, pvalues_corrected_interactions = pg.multicomp(list(out_posthocs["p-unc"][7:]), alpha=0.05, method='holm')
+        for acro_comp in range(4):
+            if H0_reject_interactions[acro_comp]:
+                if out_posthocs["hedges"][acro_comp + 7] > 0:
+                    print(f"Green: {out_posthocs['Acrobatics'][acro_comp + 7]} is significantly higher for {out_posthocs['A'][acro_comp + 7]} than {out_posthocs['B'][acro_comp + 7]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+                else:
+                    print(f"Red: {out_posthocs['Acrobatics'][acro_comp + 7]} is significantly smaller for {out_posthocs['A'][acro_comp + 7]} than {out_posthocs['B'][acro_comp + 7]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+            else:
+                print(f"Gray: No significant difference on {out_posthocs['Acrobatics'][acro_comp + 7]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+    return
 
 # ------------------------------------ Primary data frame = Mixed Anova ---------------------------------------- #
 if PRIMARY_ANALYSIS_FLAG:
@@ -197,65 +235,12 @@ if PRIMARY_ANALYSIS_FLAG:
     If the results are the same, we report the parametric p-values, otherwise we report the non-parametric p-values.
     """
 
-    print("Mixed ANOVA for Fixations duration relative")
-    out = pg.mixed_anova(data=primary_data_frame, dv='Fixations duration relative', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Fixations duration relative (Bonferoni corrections will be applied afterwards)")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Fixations duration relative', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Fixations duration relative (Bonferoni corrections will be applied afterwards)")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Fixations duration relative', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Number of fixations")
-    out = pg.mixed_anova(data=primary_data_frame, dv='Number of fixations', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Number of fixations")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Number of fixations', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Number of fixations")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Number of fixations', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Quiet eye duration relative")
-    out = pg.mixed_anova(data=primary_data_frame, dv='Quiet eye duration relative', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Quiet eye duration relative")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Quiet eye duration relative', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Quiet eye duration relative")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Quiet eye duration relative', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Quiet eye onset relative")
-    out = pg.mixed_anova(data=primary_data_frame, dv='Quiet eye onset relative', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Quiet eye onset relative")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Quiet eye onset relative', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Quiet eye onset relative")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Quiet eye onset relative', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Eye amplitude")
-    out = pg.mixed_anova(data=primary_data_frame, dv='Eye amplitude', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Eye amplitude")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Eye amplitude', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Eye amplitude")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Eye amplitude', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Neck amplitude")
-    out = pg.mixed_anova(data=primary_data_frame, dv='Neck amplitude', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Neck amplitude")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Neck amplitude', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Neck amplitude")
-    out = pg.pairwise_tests(data=primary_data_frame, dv='Neck amplitude', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
+    stats_procedure('Fixations duration relative', primary_data_frame)
+    stats_procedure('Number of fixations', primary_data_frame)
+    stats_procedure('Quiet eye duration relative', primary_data_frame)
+    stats_procedure('Quiet eye onset relative', primary_data_frame)
+    stats_procedure('Eye amplitude', primary_data_frame)
+    stats_procedure('Neck amplitude', primary_data_frame)
 
     duration_data_frame = pd.DataFrame(columns=['Name', 'Expertise', 'Acrobatics', 'Data type', 'Data measure'])
     for i, name in enumerate(trial_per_athlete_per_move_index):
@@ -280,10 +265,16 @@ if PRIMARY_ANALYSIS_FLAG:
     print(f'{out}\n\n')
     print("T-tests for quiet eye duration vs fixation duration")
     out = pg.pairwise_tests(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', parametric=True)
+    H0_reject, pvalues_corrected = pg.multicomp(list(out["p-unc"]), alpha=0.05, method='holm')
     print(f'{out}\n\n')
+    print(f'H0 rejection: {H0_reject}\n'
+          f'p-values: {pvalues_corrected}\n\n')
     print("Wilcoxon and Mann-Whiteney tests for quiet eye duration vs fixation duration")
     out = pg.pairwise_tests(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', parametric=False)
+    H0_reject, pvalues_corrected = pg.multicomp(list(out["p-unc"]), alpha=0.05, method='holm')
     print(f'{out}\n\n')
+    print(f'H0 rejection: {H0_reject}\n'
+          f'p-values: {pvalues_corrected}\n\n')
 
 # -------------------------------- Trajectories data frame = SPM1D ------------------------------------ #
 
@@ -668,16 +659,7 @@ if TRAJECTORIES_ANALYSIS_FLAG:
             intra_MSTD_table = pd.concat([intra_MSTD_table, pd.DataFrame(df)])
 
     # mixed ANOVA for the MSTD
-    print("Mixed ANOVA for intra-MSTD")
-    out = pg.mixed_anova(data=intra_MSTD_table, dv='MSTD', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for intra-MSTD")
-    out = pg.pairwise_tests(data=intra_MSTD_table, dv='MSTD', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for intra-MSTD")
-    out = pg.pairwise_tests(data=intra_MSTD_table, dv='MSTD', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
+    stats_procedure('MSTD', intra_MSTD_table)
 
 if TRAJECTORIES_HEATMAPS_FLAG:
     def put_lines_on_fig(ax):
@@ -870,76 +852,13 @@ if AOI_ANALYSIS_FLAG:
 
     AOI_proportions_data_frame = AOI_proportions_table_temporary
 
-
-    print("Mixed ANOVA for Trampoline bed")
-    out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Trampoline bed', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Trampoline bed")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Trampoline bed', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Trampoline bed")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Trampoline bed', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Trampoline")
-    out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Trampoline', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Trampoline")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Trampoline', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Trampoline")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Trampoline', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Wall back front")
-    out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Wall back front', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Wall back front")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Wall back front', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Wall back front")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Wall back front', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Ceiling")
-    out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Ceiling', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Ceiling")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Ceiling', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Ceiling")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Ceiling', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Wall sides")
-    out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Wall sides', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Wall sides")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Wall sides', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Wall sides")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Wall sides', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    # print("Mixed ANOVA for Athlete himself")
-    # out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Athlete himself', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    # print(f'{out}\n\n')
-    # print("T-tests for Athlete himself")
-    # out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Athlete himself', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    # print(f'{out}\n\n')
-    # print("Wilcoxon and Mann-Whiteney tests for Athlete himself")
-    # out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Athlete himself', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    # print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Blink")
-    out = pg.mixed_anova(data=AOI_proportions_data_frame, dv='Blink', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Blink")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Blink', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Blink")
-    out = pg.pairwise_tests(data=AOI_proportions_data_frame, dv='Blink', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
+    stats_procedure('Trampoline bed', AOI_proportions_data_frame)
+    stats_procedure('Trampoline', AOI_proportions_data_frame)
+    stats_procedure('Wall back front', AOI_proportions_data_frame)
+    stats_procedure('Ceiling', AOI_proportions_data_frame)
+    stats_procedure('Wall sides', AOI_proportions_data_frame)
+    # stats_procedure('Athlete himself', AOI_proportions_data_frame)
+    stats_procedure('Blink', AOI_proportions_data_frame)
 
 
 # ------------------------- Neck + eye proportion of movements data frame = Mixed ANOVA ----------------------------- #
@@ -965,45 +884,10 @@ if NECK_EYE_ANALYSIS_FLAG:
 
     neck_eye_movements_data_frame = neck_eye_movements_table_temporary
 
-    print("Mixed ANOVA for Anticipatory movements")
-    out = pg.mixed_anova(data=neck_eye_movements_data_frame, dv='Anticipatory movements', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("Ttests for Anticipatory movements")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Anticipatory movements', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Anticipatory movements")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Anticipatory movements', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Compensatory movements")
-    out = pg.mixed_anova(data=neck_eye_movements_data_frame, dv='Compensatory movements', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Compensatory movements")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Compensatory movements', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Compensatory movements")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Compensatory movements', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Spotting movements")
-    out = pg.mixed_anova(data=neck_eye_movements_data_frame, dv='Spotting movements', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Spotting movements")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Spotting movements', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Spotting movements")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Spotting movements', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
-
-    print("Mixed ANOVA for Self-motion detection")
-    out = pg.mixed_anova(data=neck_eye_movements_data_frame, dv='Movement detection', within='Acrobatics', between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for Self-motion detection")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Movement detection', within='Acrobatics', between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for Self-motion detection")
-    out = pg.pairwise_tests(data=neck_eye_movements_data_frame, dv='Movement detection', within='Acrobatics', between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
+    stats_procedure('Anticipatory movements', neck_eye_movements_data_frame)
+    stats_procedure('Compensatory movements', neck_eye_movements_data_frame)
+    stats_procedure('Spotting movements', neck_eye_movements_data_frame)
+    stats_procedure('Movement detection', neck_eye_movements_data_frame)
 
 
 # ----------------------------------- Heatmap spreading data frame = Mixed ANOVA -------------------------------------- #
@@ -1028,32 +912,9 @@ if SPREADING_HEATMAP_FLAG:
             heatmaps_spreading_table_temporary = pd.concat([heatmaps_spreading_table_temporary, pd.DataFrame(df)])
 
     heatmaps_spreading_data_frame = heatmaps_spreading_table_temporary
-    
-    print("Mixed ANOVA for heatmap 90 percentile ellipse width")
-    out = pg.mixed_anova(data=heatmaps_spreading_data_frame, dv='Width of the ellipse comprising 90 percentiles', within='Acrobatics',
-                         between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for heatmap 90 percentile ellipse width")
-    out = pg.pairwise_tests(data=heatmaps_spreading_data_frame, dv='Width of the ellipse comprising 90 percentiles', within='Acrobatics',
-                            between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for heatmap 90 percentile ellipse width")
-    out = pg.pairwise_tests(data=heatmaps_spreading_data_frame, dv='Width of the ellipse comprising 90 percentiles', within='Acrobatics',
-                            between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
 
-    print("Mixed ANOVA for heatmap 90 percentile ellipse height")
-    out = pg.mixed_anova(data=heatmaps_spreading_data_frame, dv='Height of the ellipse comprising 90 percentiles', within='Acrobatics',
-                            between='Expertise', subject='Name', effsize='n2')
-    print(f'{out}\n\n')
-    print("T-tests for heatmap 90 percentile ellipse height")
-    out = pg.pairwise_tests(data=heatmaps_spreading_data_frame, dv='Height of the ellipse comprising 90 percentiles', within='Acrobatics',
-                            between='Expertise', subject='Name', parametric=True)
-    print(f'{out}\n\n')
-    print("Wilcoxon and Mann-Whiteney tests for heatmap 90 percentile ellipse height")
-    out = pg.pairwise_tests(data=heatmaps_spreading_data_frame, dv='Height of the ellipse comprising 90 percentiles', within='Acrobatics',
-                            between='Expertise', subject='Name', parametric=False)
-    print(f'{out}\n\n')
+    stats_procedure('Width of the ellipse comprising 90 percentiles', heatmaps_spreading_data_frame)
+    stats_procedure('Height of the ellipse comprising 90 percentiles', heatmaps_spreading_data_frame)
 
 
 # ---------------------------------------- Qualitative data frame = SPM1D -------------------------------------------- #
