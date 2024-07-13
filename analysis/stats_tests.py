@@ -169,9 +169,9 @@ def stats_procedure(name, dataframe):
     print(f'{out}\n\n')
 
     # Post-hocs
-    print(f"T-tests for {name} (Holm-Bonferroni corrections will be applied afterwards)")
+    print(f"Wilcoxon or Mann-Whiteney for {name} (Holm-Bonferroni corrections will be applied afterwards)")
     out_posthocs = pg.pairwise_tests(data=dataframe, dv=name, within='Acrobatics', between='Expertise', subject='Name',
-                            parametric=True)
+                            parametric=False)
     print(f'{out_posthocs}\n\n')
 
     if out['p-unc'][0] < 0.05:
@@ -228,11 +228,8 @@ if PRIMARY_ANALYSIS_FLAG:
     primary_data_frame = primary_data_frame_temporary
 
     """
-    Here we do a sensitivity analysis to assess the impact of the normality hypothesis on the results of the stats tests.
     First, a mixed ANOVA is used.
-    Then, a T-test post hoc is used to identify the significant differences (Bonferoni correction should be applieds to the p-values).
-    Then, a non-parametric post hoc is used (Wilcoxon or Mann-Whiteney) to identify the significant differences (Bonferoni correction should be applieds to the p-values).
-    If the results are the same, we report the parametric p-values, otherwise we report the non-parametric p-values.
+    Then, a non-parametric post hoc is used (Wilcoxon or Mann-Whiteney) to identify the significant differences (Holm-Bonferroni correction should be applieds to the p-values).
     """
 
     stats_procedure('Fixations duration relative', primary_data_frame)
@@ -263,12 +260,6 @@ if PRIMARY_ANALYSIS_FLAG:
     print("Two-way paired measures ANOVA for quiet eye duration vs fixation duration")
     out = pg.rm_anova(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', correction=True, effsize='n2')
     print(f'{out}\n\n')
-    print("T-tests for quiet eye duration vs fixation duration")
-    out = pg.pairwise_tests(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', parametric=True)
-    H0_reject, pvalues_corrected = pg.multicomp(list(out["p-unc"]), alpha=0.05, method='holm')
-    print(f'{out}\n\n')
-    print(f'H0 rejection: {H0_reject}\n'
-          f'p-values: {pvalues_corrected}\n\n')
     print("Wilcoxon and Mann-Whiteney tests for quiet eye duration vs fixation duration")
     out = pg.pairwise_tests(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', parametric=False)
     H0_reject, pvalues_corrected = pg.multicomp(list(out["p-unc"]), alpha=0.05, method='holm')
