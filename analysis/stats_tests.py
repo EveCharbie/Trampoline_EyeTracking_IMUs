@@ -197,7 +197,7 @@ def stats_procedure(name, dataframe):
                 else:
                     print(f"Red: {out_posthocs['Acrobatics'][acro_comp + 7]} is significantly smaller for {out_posthocs['A'][acro_comp + 7]} than {out_posthocs['B'][acro_comp + 7]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
             else:
-                print(f"Gray: No significant difference on {out_posthocs['Acrobatics'][acro_comp + 7]} for {name} (p-value = {pvalues_corrected_acrobatics[acro_comp]})")
+                print(f"Gray: No significant difference on {out_posthocs['Acrobatics'][acro_comp + 7]} for {name} (p-value = {pvalues_corrected_interactions[acro_comp]})")
     return
 
 # ------------------------------------ Primary data frame = Mixed Anova ---------------------------------------- #
@@ -258,7 +258,7 @@ if PRIMARY_ANALYSIS_FLAG:
             duration_data_frame = pd.concat([duration_data_frame, pd.DataFrame(df)])
 
     print("Two-way paired measures ANOVA for quiet eye duration vs fixation duration")
-    out = pg.rm_anova(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', correction=True, effsize='n2')
+    out = pg.rm_anova(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', correction=True, effsize='np2')
     print(f'{out}\n\n')
     print("Wilcoxon and Mann-Whiteney tests for quiet eye duration vs fixation duration")
     out = pg.pairwise_tests(data=duration_data_frame, dv='Data measure', within=['Data type', 'Acrobatics'], subject='Name', parametric=False)

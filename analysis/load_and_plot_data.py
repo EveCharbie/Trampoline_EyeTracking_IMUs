@@ -37,39 +37,44 @@ def plot_primary_metrics(df, move_list, subelite_names, elite_names, metric, met
         coef = 1
 
     plt.figure()
-    for i in range(len(df)):
-        move_index = move_list.index(df['Acrobatics'][i])
-        if df['Expertise'][i] == 'SubElite':
-            if df['Name'][i] in subelite_names:
-                plt.plot((subelite_names.index(df['Name'][i]) + 1) * -0.1 + move_index * 2, df[metric][i]*coef,
-                     color=subelite_color, marker='o', markersize=2)
-        if df['Expertise'][i] == 'Elite':
-            if df['Name'][i] in elite_names:
-                plt.plot((elite_names.index(df['Name'][i]) + 1) * 0.1 + move_index * 2, df[metric][i]*coef,
-                     color=elite_color, marker='o', markersize=2)
-
     for i in range(len(move_list)):
         means_subelite = []
         means_elite = []
+        all_subelite = []
+        all_elite = []
         for j in range(len(subelite_names)):
             index_this_time = np.where(
                 np.logical_and(df['Name'] == subelite_names[j], df['Acrobatics'] == move_list[i]))
             subelite_list = list(df[metric][index_this_time[0]])
+            all_subelite += list(np.array(df[metric][index_this_time[0]])[~np.isnan(df[metric][index_this_time[0]])] * coef)
             means_subelite.append(np.nanmedian(subelite_list))
-            plt.plot(i * 2 - 0.1 * (j + 1), means_subelite[j]*coef, color='k', marker='o', markersize=3)
         for j in range(len(elite_names)):
             index_this_time = np.where(
                 np.logical_and(df['Name'] == elite_names[j], df['Acrobatics'] == move_list[i]))
-            elite_list = df[metric][index_this_time[0]]
+            elite_list = list(df[metric][index_this_time[0]])
+            all_elite += list(np.array(df[metric][index_this_time[0]])[~np.isnan(df[metric][index_this_time[0]])] * coef)
             means_elite.append(np.nanmedian(elite_list))
-            plt.plot(i * 2 + 0.1 * (j + 1), means_elite[j]*coef, color='k', marker='o', markersize=3)
 
-        plt.errorbar(i * 2 - 0.45, np.nanmean(means_subelite)*coef, yerr=np.nanstd(means_subelite)*coef, color='black',
-                     marker='o', markersize=5, capsize=3)
+
+        violin = plt.violinplot([all_subelite, all_elite], positions=[i * 2 - 0.45, i * 2 + 0.45], showextrema=False)
+        violin_subelite = violin['bodies'][0]
+        violin_elite = violin['bodies'][1]
+        violin_subelite.set_facecolor(subelite_color)
+        violin_elite.set_facecolor(elite_color)
+        violin_subelite.set_alpha(0.3)
+        violin_elite.set_alpha(0.3)
+
+        plt.errorbar(i * 2 - 0.45, np.nanmean(means_subelite)*coef, yerr=np.nanstd(means_subelite)*coef,
+                     color=subelite_color, marker='s', markersize=5, capsize=3)
         # print(f"Sub-elites {move_list[i]}: {np.nanmean(means_subelite)*coef} +/- {np.nanstd(means_subelite)*coef}")
-        plt.errorbar(i * 2 + 0.45, np.nanmean(means_elite)*coef, yerr=np.nanstd(means_elite)*coef, color='black', marker='o',
-                     markersize=5, capsize=3)
+        plt.errorbar(i * 2 + 0.45, np.nanmean(means_elite)*coef, yerr=np.nanstd(means_elite)*coef,
+                     color=elite_color, marker='s', markersize=5, capsize=3)
         # print(f"Elites {move_list[i]}: {np.nanmean(means_elite)*coef} +/- {np.nanstd(means_elite)*coef}")
+
+        # for j in range(len(subelite_names)):
+        #     plt.plot(i * 2 - 0.45, means_subelite[j] * coef, color='k', marker='.', markersize=3)
+        # for j in range(len(elite_names)):
+        #     plt.plot(i * 2 + 0.45, means_elite[j] * coef, color='k', marker='.', markersize=3)
 
     if unit is None:
         label_y = metric_name
@@ -537,10 +542,6 @@ def heatmap_spreading_plots(df, move_list, subelite_names, elite_names, plot_pat
     plt.savefig(f"{plot_path}/heatmap_spreading.png", dpi=300)
     # plt.show()
 
-    return
-
-def heatmap_percetiel_plot(df, move_list, elite_names, subelite_names, plot_path):
-    plot_primary_metrics(df, move_list, subelite_names, elite_names, 'Heat map 90th percentile', 'cm', 'percetile_heatmaps', f'{plot_path}/')
     return
 
 def timing_plots(df, move_list, subelite_names, elite_names, plot_path):
